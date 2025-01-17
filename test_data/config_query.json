@@ -1,0 +1,40 @@
+{
+  "code": 200,
+  "data": {
+    "enable_api_battery_query": true,
+    "enable_api_call_query": true,
+    "enable_api_clone": true,
+    "enable_api_contact_add": true,
+    "enable_api_contact_query": true,
+    "enable_api_location": false,
+    "enable_api_sms_query": true,
+    "enable_api_sms_send": true,
+    "enable_api_wol": true,
+    "extra_device_mark": "Dev",
+    "extra_sim1": "A",
+    "extra_sim2": "B",
+    "sim_info_list": {
+      "0": {
+        "carrier_name": "CMCC",
+        "country_iso": "cn",
+        "icc_id": "",
+        "number": "",
+        "sim_slot_index": 0,
+        "subscription_id": 2
+      },
+      "1": {
+        "carrier_name": "CMCC",
+        "country_iso": "cn",
+        "icc_id": "",
+        "number": "",
+        "sim_slot_index": 1,
+        "subscription_id": 1
+      }
+    },
+    "version_code": 300053,
+    "version_name": "3.3.2.240815"
+  },
+  "msg": "success",
+  "sign": "MZpFXVmbXJgsuSek2RF%2F62eo0PWsOoDhR8OFND2rDAY%3D",
+  "timestamp": 1737054664286
+}

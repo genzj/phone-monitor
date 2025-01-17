@@ -1,0 +1,15 @@
+{
+  "code": 200,
+  "data": {
+    "health": "良好",
+    "level": "36%",
+    "plugged": "未知",
+    "scale": "100%",
+    "status": "放电中",
+    "temperature": "19.70℃",
+    "voltage": "3.80V"
+  },
+  "msg": "success",
+  "sign": "atYJSZ8OUAtl68nWcFNqxfKPeQlfPPbC0BoDV4hHOS8%3D",
+  "timestamp": 1737054664309
+}
