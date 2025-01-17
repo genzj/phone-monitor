@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct SimInfo {
@@ -38,20 +39,14 @@ pub struct Battery {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub enum ResponseData {
-    Config(Config),
-    Battery(Battery),
-    None,
-}
-
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ResponseWrapper<T>
-where for <'a> Option<T>: core::fmt::Debug + Serialize + Deserialize<'a>,
+where
+    Option<T>: Debug + for<'a> Deserialize<'a>,
 {
     pub code: i32,
     pub msg: Option<String>,
     pub data: Option<T>,
-    pub timestamp: i64,
+    pub timestamp: u64,
     pub sign: Option<String>,
 }
 

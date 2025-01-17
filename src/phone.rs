@@ -1,4 +1,4 @@
-use crate::datatype::{BatteryResponse, ConfigResponse};
+use crate::datatype::{BatteryResponse, ConfigResponse, ResponseWrapper};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use hmac_sha256::HMAC;
@@ -6,6 +6,8 @@ use reqwest::Response;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::error::Error;
+use std::fmt;
+use std::fmt::Debug;
 use std::time::SystemTime;
 
 trait Clock {
@@ -41,6 +43,22 @@ type ApiResult<T> = Result<T, Box<dyn Error>>;
 const API_PATH_QUERY_CONFIG: &str = "/config/query";
 const API_PATH_QUERY_BATTERY: &str = "/battery/query";
 
+#[derive(Debug)]
+pub struct WrongSignatureResponse<T>(pub ResponseWrapper<T>)
+where
+    T: Debug + for<'a> Deserialize<'a>;
+
+impl<T> fmt::Display for WrongSignatureResponse<T>
+where
+    T: Debug + for<'a> Deserialize<'a>,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "WrongSignatureResponse")
+    }
+}
+
+impl<T> Error for WrongSignatureResponse<T> where T: Debug + for<'a> Deserialize<'a> {}
+
 impl Api {
     pub fn new(base_url: impl Into<String>, secret: impl Into<String>) -> Api {
         Api {
@@ -59,6 +77,15 @@ impl Api {
             .replace('=', "%3D");
         println!("sign timestamp {} == {}", timestamp, sign);
         sign
+    }
+
+    fn verify(&self, timestamp: u64, sign: &Option<String>) -> bool {
+        let actual = self.sign(timestamp);
+        if let Some(expect) = sign {
+            actual.eq(expect)
+        } else {
+            false
+        }
     }
 
     fn make_payload(&self, data: Value) -> DataPayload {
@@ -83,22 +110,28 @@ impl Api {
         }
     }
 
-    async fn query<T>(&self, path: String, data: Option<Value>) -> ApiResult<T> 
-    where T: for <'a> Deserialize<'a>
+    async fn query<T>(&self, path: &str, data: Option<Value>) -> ApiResult<ResponseWrapper<T>>
+    where
+        T: 'static + Debug + for<'a> Deserialize<'a>,
     {
-        self.send_post(path, data)
+        let result = self
+            .send_post(path.to_string(), data)
             .await?
-            .json::<T>()
+            .json::<ResponseWrapper<T>>()
             .await
-            .map_err(|e| Box::<dyn Error>::from(e))
+            .map_err(|e| Box::<dyn Error>::from(e))?;
+        if !self.verify(result.timestamp, &result.sign) {
+            return Err(Box::new(WrongSignatureResponse(result)));
+        }
+        Ok(result)
     }
 
     pub async fn query_config(&self) -> ApiResult<ConfigResponse> {
-        self.query(API_PATH_QUERY_CONFIG.to_string(), None).await
+        self.query(API_PATH_QUERY_CONFIG, None).await
     }
 
     pub async fn query_battery(&self) -> ApiResult<BatteryResponse> {
-        self.query(API_PATH_QUERY_BATTERY.to_string(), None).await
+        self.query(API_PATH_QUERY_BATTERY, None).await
     }
 }
 
@@ -130,29 +163,40 @@ mod tests {
 
     async fn mock_config_query(server: &mut Server) -> &mut Server {
         server
-                .mock("POST", "/config/query")
-                .match_body(Matcher::PartialJsonString(
-                    r#"{"data": {}, "timestamp": 1737055057812, "sign": "zlRf047zhWs%2B1XH5DUqUV8Fv07doAFpJUwmj6U7rh8s%3D"}"#.to_string(),
-                ))
-                .with_status(200)
-                .with_header("content-type", "application/json")
-                .with_body_from_file("test_data/config_query.json")
-                .create_async()
-                .await;
+            .mock("POST", "/config/query")
+            .match_body(Matcher::PartialJsonString(
+                r#"{"data": {}, "timestamp": 1737055057812, "sign": "zlRf047zhWs%2B1XH5DUqUV8Fv07doAFpJUwmj6U7rh8s%3D"}"#.to_string(),
+            ))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body_from_file("test_data/config_query.json")
+            .create_async()
+            .await;
         server
     }
 
     async fn mock_battery_query(server: &mut Server) -> &mut Server {
         server
-                .mock("POST", "/battery/query")
-                .match_body(Matcher::PartialJsonString(
-                    r#"{"data": {}, "timestamp": 1737055058101, "sign": "CKT7Zg8Apu84wMEsfvifZgDKLLPrwBL%2Fwn%2Fgmm7SqcU%3D"}"#.to_string(),
-                ))
-                .with_status(200)
-                .with_header("content-type", "application/json")
-                .with_body_from_file("test_data/battery_query.json")
-                .create_async()
-                .await;
+            .mock("POST", "/battery/query")
+            .match_body(Matcher::PartialJsonString(
+                r#"{"data": {}, "timestamp": 1737055058101, "sign": "CKT7Zg8Apu84wMEsfvifZgDKLLPrwBL%2Fwn%2Fgmm7SqcU%3D"}"#.to_string(),
+            ))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body_from_file("test_data/battery_query.json")
+            .create_async()
+            .await;
+        server
+    }
+
+    async fn mock_invalid_signature(server: &mut Server) -> &mut Server {
+        server
+            .mock("POST", "/invalid/query")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body_from_file("test_data/invalid_sign.json")
+            .create_async()
+            .await;
         server
     }
 
@@ -163,6 +207,23 @@ mod tests {
             api.sign(1737055057812),
             "zlRf047zhWs%2B1XH5DUqUV8Fv07doAFpJUwmj6U7rh8s%3D"
         );
+    }
+
+    #[tokio::test]
+    async fn test_invalid_signature_response() {
+        init_test_logger();
+        let mut server = create_mock_server().await;
+        let server = mock_invalid_signature(&mut server).await;
+        let api = create_api(&server, 0);
+        let response: ApiResult<ResponseWrapper<Value>> = api.query("/invalid/query", None).await;
+        assert!(response.is_err());
+        let err = response.unwrap_err();
+        println!("err: {:?}", err);
+        assert!(err.is::<WrongSignatureResponse<Value>>());
+        let err = err.downcast::<WrongSignatureResponse<Value>>().unwrap();
+        assert_eq!(err.0.code, 200);
+        assert_eq!(err.0.msg.unwrap(), "test test");
+        assert_eq!(err.0.data, None);
     }
 
     #[tokio::test]
@@ -184,7 +245,7 @@ mod tests {
         assert!(sim_info_list.contains_key("0"));
         assert_eq!(sim_info_list.get("0").unwrap().carrier_name, "CMCC");
     }
-    
+
     #[tokio::test]
     async fn test_query_battery() {
         init_test_logger();
