@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct SimInfo {
+pub(crate) struct SimInfo {
     pub carrier_name: String,
     pub country_iso: String,
     pub icc_id: String,
@@ -13,7 +13,7 @@ pub struct SimInfo {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct Config {
+pub(crate) struct Config {
     pub enable_api_battery_query: bool,
     pub enable_api_call_query: bool,
     pub enable_api_clone: bool,
@@ -28,7 +28,7 @@ pub struct Config {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct Battery {
+pub(crate) struct Battery {
     pub level: String,
     pub scale: Option<String>,
     pub voltage: Option<String>,
@@ -39,7 +39,7 @@ pub struct Battery {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub struct ResponseWrapper<T>
+pub(crate) struct ResponseWrapper<T>
 where
     Option<T>: Debug + for<'a> Deserialize<'a>,
 {
@@ -50,5 +50,5 @@ where
     pub sign: Option<String>,
 }
 
-pub type ConfigResponse = ResponseWrapper<Config>;
-pub type BatteryResponse = ResponseWrapper<Battery>;
+pub(crate) type ConfigResponse = ResponseWrapper<Config>;
+pub(crate) type BatteryResponse = ResponseWrapper<Battery>;
