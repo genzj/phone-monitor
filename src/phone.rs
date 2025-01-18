@@ -25,14 +25,14 @@ impl Clock for SystemClock {
     }
 }
 
-pub struct Api {
+pub(crate) struct Api {
     base_url: String,
     secret: String,
     clock: Box<dyn Clock>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct DataPayload {
+pub(crate) struct DataPayload {
     data: Value,
     timestamp: u64,
     sign: String,
@@ -44,7 +44,7 @@ const API_PATH_QUERY_CONFIG: &str = "/config/query";
 const API_PATH_QUERY_BATTERY: &str = "/battery/query";
 
 #[derive(Debug)]
-pub struct WrongSignatureResponse<T>(pub ResponseWrapper<T>)
+pub(crate) struct WrongSignatureResponse<T>(pub ResponseWrapper<T>)
 where
     T: Debug + for<'a> Deserialize<'a>;
 
@@ -60,7 +60,7 @@ where
 impl<T> Error for WrongSignatureResponse<T> where T: Debug + for<'a> Deserialize<'a> {}
 
 impl Api {
-    pub fn new(base_url: impl Into<String>, secret: impl Into<String>) -> Api {
+    pub(crate) fn new(base_url: impl Into<String>, secret: impl Into<String>) -> Api {
         Api {
             base_url: base_url.into(),
             secret: secret.into(),
@@ -126,11 +126,11 @@ impl Api {
         Ok(result)
     }
 
-    pub async fn query_config(&self) -> ApiResult<ConfigResponse> {
+    pub(crate) async fn query_config(&self) -> ApiResult<ConfigResponse> {
         self.query(API_PATH_QUERY_CONFIG, None).await
     }
 
-    pub async fn query_battery(&self) -> ApiResult<BatteryResponse> {
+    pub(crate) async fn query_battery(&self) -> ApiResult<BatteryResponse> {
         self.query(API_PATH_QUERY_BATTERY, None).await
     }
 }

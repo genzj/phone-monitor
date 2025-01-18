@@ -1,5 +1,4 @@
 use crate::datatype::{BatteryResponse, ConfigResponse};
-use aws_config::Region;
 use aws_sdk_cloudwatch::config::http::HttpResponse;
 use aws_sdk_cloudwatch::error::SdkError;
 use aws_sdk_cloudwatch::operation::put_metric_data::{PutMetricDataError, PutMetricDataOutput};
@@ -40,18 +39,16 @@ fn create_metric_data(config: &ConfigResponse, battery: &BatteryResponse) -> Met
         .build()
 }
 
-async fn send(
+pub(crate) async fn send(
+    namespace: &str,
     config: &ConfigResponse,
     battery: &BatteryResponse,
 ) -> Result<PutMetricDataOutput, SdkError<PutMetricDataError, HttpResponse>> {
-    let shared_config = aws_config::from_env()
-        .region(Region::new("us-west-2"))
-        .load()
-        .await;
+    let shared_config = aws_config::from_env().load().await;
     let client = Client::new(&shared_config);
     client
         .put_metric_data()
-        .namespace("phone")
+        .namespace(namespace)
         .metric_data(create_metric_data(config, battery))
         .send()
         .await
