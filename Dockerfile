@@ -6,11 +6,11 @@ WORKDIR /app
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
-    apt-get install -y sccache
+    apt-get install -y sccache apt-utils
 ENV RUSTC_WRAPPER=sccache SCCACHE_DIRECT=true
 COPY . .
-RUN --mount=type=cache,target=/root/.cargo/registry \
-    --mount=type=cache,target=/root/.cache/sccache \
+RUN --mount=type=cache,target=/root/.cargo/registry,sharing=locked \
+    --mount=type=cache,target=/root/.cache/sccache,sharing=locked \
     cargo build --release && \
     sccache --show-stats
 
