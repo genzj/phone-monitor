@@ -5,6 +5,7 @@ use aws_sdk_cloudwatch::operation::put_metric_data::{PutMetricDataError, PutMetr
 use aws_sdk_cloudwatch::primitives::DateTime;
 use aws_sdk_cloudwatch::types::{Dimension, MetricDatum, StandardUnit};
 use aws_sdk_cloudwatch::Client;
+use log::info;
 
 fn create_metric_data(config: &ConfigResponse, battery: &BatteryResponse) -> MetricDatum {
     let timestamp_ms = battery.timestamp;
@@ -24,6 +25,8 @@ fn create_metric_data(config: &ConfigResponse, battery: &BatteryResponse) -> Met
         .map(|x| x.as_str())
         .nth(0)
         .unwrap_or("unknown");
+
+    info!("phone {} battery level {}", phone_id, battery_level);
 
     MetricDatum::builder()
         .metric_name("battery")

@@ -10,6 +10,7 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Debug;
 use std::time::SystemTime;
+use log::trace;
 
 trait Clock {
     fn timestamp(&self) -> u64;
@@ -76,7 +77,7 @@ impl Api {
             .replace('+', "%2B")
             .replace('/', "%2F")
             .replace('=', "%3D");
-        println!("sign timestamp {} == {}", timestamp, sign);
+        trace!("sign timestamp {} ==> {}", timestamp, sign);
         sign
     }
 
@@ -97,7 +98,7 @@ impl Api {
             timestamp,
             sign,
         };
-        println!("payload: {:?}", payload);
+        trace!("generated payload: {:?}", payload);
         payload
     }
 
