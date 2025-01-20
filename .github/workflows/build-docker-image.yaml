@@ -96,9 +96,9 @@ jobs:
         with:
           cache-map: |
             {
-              "var-cache-apt": "/var/cache/apt"
-              "var-lib-apt": "/var/lib/apt"
-              "root-cargo-registry": "/root/.cargo/registry"
+              "var-cache-apt": "/var/cache/apt",
+              "var-lib-apt": "/var/lib/apt",
+              "root-cargo-registry": "/root/.cargo/registry",
               "root-cache-sccache": "/root/.cache/sccache"
             }
           skip-extraction: ${{ steps.cache.outputs.cache-hit }}
