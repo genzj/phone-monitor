@@ -38,9 +38,6 @@ jobs:
 
   docker-image:
     runs-on: ubuntu-latest
-    env:
-      SCCACHE_GHA_ENABLED: "true"
-      RUSTC_WRAPPER: "sccache"
 
     permissions:
       contents: read
@@ -55,12 +52,6 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
-
-      # TODO bind mount cache to docker builder and enable sccache
-      - uses: Swatinem/rust-cache@v2
-
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.7
 
       - name: Docker meta
         id: meta

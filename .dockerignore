@@ -11,3 +11,9 @@ README.md
 CHANGELOG.md
 docker-compose.yml
 Dockerfile
+
+# Rust
+/target/
+
+# Github
+.github/
