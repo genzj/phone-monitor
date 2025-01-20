@@ -1,3 +1,4 @@
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -41,7 +42,7 @@ pub(crate) struct Battery {
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub(crate) struct ResponseWrapper<T>
 where
-    Option<T>: Debug + for<'a> Deserialize<'a>,
+    Option<T>: Debug + DeserializeOwned,
 {
     pub code: i32,
     pub msg: Option<String>,

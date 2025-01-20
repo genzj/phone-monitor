@@ -3,6 +3,7 @@ use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use hmac_sha256::HMAC;
 use reqwest::Response;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::error::Error;
@@ -46,18 +47,18 @@ const API_PATH_QUERY_BATTERY: &str = "/battery/query";
 #[derive(Debug)]
 pub(crate) struct WrongSignatureResponse<T>(pub ResponseWrapper<T>)
 where
-    T: Debug + for<'a> Deserialize<'a>;
+    T: Debug + DeserializeOwned;
 
 impl<T> fmt::Display for WrongSignatureResponse<T>
 where
-    T: Debug + for<'a> Deserialize<'a>,
+    T: Debug + DeserializeOwned,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "WrongSignatureResponse")
     }
 }
 
-impl<T> Error for WrongSignatureResponse<T> where T: Debug + for<'a> Deserialize<'a> {}
+impl<T> Error for WrongSignatureResponse<T> where T: Debug + DeserializeOwned {}
 
 impl Api {
     pub(crate) fn new(base_url: impl Into<String>, secret: impl Into<String>) -> Api {
@@ -112,7 +113,7 @@ impl Api {
 
     async fn query<T>(&self, path: &str, data: Option<Value>) -> ApiResult<ResponseWrapper<T>>
     where
-        T: 'static + Debug + for<'a> Deserialize<'a>,
+        T: 'static + Debug + DeserializeOwned,
     {
         let result = self
             .send_post(path.to_string(), data)
