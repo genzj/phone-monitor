@@ -1,15 +1,12 @@
 ---
 services:
   monitor:
-    image: phone-monitor:latest
+    image: ghcr.io/genzj/phone-monitor:latest
     environment:
       - "TZ=America/New_York"
-      - "PM_BASE_URL=http://192.168.1.100:5000"
-      - "PM_SECRET=secret"
-      - "PM_METRIC_NAMESPACE=phone.test"
-      - "AWS_ACCESS_KEY_ID=key-id"
-      - "AWS_SECRET_ACCESS_KEY=access-key"
-      - "AWS_REGION=us-west-2"
+    env_file:
+      - path: stack.env
+        required: false
     container_name: "${COMPOSE_PROJECT_NAME}-monitor"
 
   ofelia:
