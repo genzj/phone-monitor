@@ -1,11 +1,11 @@
 use crate::phone::Api;
 use crate::report::send;
+use clap::error::{ContextKind, ContextValue};
 use clap::{Args, CommandFactory, Parser};
 use log::{debug, info, trace, warn};
 use std::env;
 use std::fmt::Display;
 use std::str::FromStr;
-use clap::error::{ContextKind, ContextValue};
 
 mod datatype;
 mod phone;
@@ -109,10 +109,15 @@ async fn main() {
 
     if cli.api_config.locator.is_empty() {
         info!("no base_url and secret provided, exit");
-        let mut err = clap::Error::new(clap::error::ErrorKind::MissingRequiredArgument).with_cmd(&Cli::command());
-        err.insert(ContextKind::SuggestedArg, ContextValue::String(String::from("specify either --locator or --base-url + --secret")));
-        let _ = err.print();
-        return;
+        let mut err = clap::Error::new(clap::error::ErrorKind::MissingRequiredArgument)
+            .with_cmd(&Cli::command());
+        err.insert(
+            ContextKind::Suggested,
+            ContextValue::StyledStrs(
+                vec![("specify either --locator or --base-url + --secret").into()]
+            )
+        );
+        err.exit();
     }
 
     for locator in cli.api_config.locator {
