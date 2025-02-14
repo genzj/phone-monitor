@@ -9,7 +9,7 @@ use serde_json::Value;
 use std::error::Error;
 use std::fmt;
 use std::fmt::Debug;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 use log::trace;
 
 trait Clock {
@@ -103,7 +103,10 @@ impl Api {
     }
 
     async fn send_post(&self, path: String, data: Option<Value>) -> ApiResult<Response> {
-        let client = reqwest::Client::new();
+        let client = reqwest::ClientBuilder::new()
+            .connect_timeout(Duration::from_secs(10))
+            .connection_verbose(true)
+            .build()?;
         let url = format!("{}{}", self.base_url, path);
         let data = data.unwrap_or_else(|| Value::Object(Default::default()));
         match client.post(url).json(&self.make_payload(data)).send().await {

@@ -2,7 +2,7 @@ use crate::phone::Api;
 use crate::report::send;
 use clap::error::{ContextKind, ContextValue};
 use clap::{Args, CommandFactory, Parser};
-use log::{debug, info, trace, warn};
+use log::{debug, error, info, trace, warn};
 use std::env;
 use std::fmt::Display;
 use std::str::FromStr;
@@ -85,7 +85,7 @@ struct Cli {
 async fn main() {
     dotenv::dotenv().ok();
 
-    pretty_env_logger::init();
+    pretty_env_logger::init_timed();
 
     let mut cli = Cli::parse();
 
@@ -129,9 +129,20 @@ async fn query_api(base_url: &str, secret: &str, dry_run: bool, metric_namespace
     let base_url = base_url.trim_end_matches("/").to_string();
     info!("using base_url: {}", base_url);
     let api = Api::new(base_url, secret);
-    let config = api.query_config().await.unwrap();
-    let battery = api.query_battery().await.unwrap();
+    let config = api.query_config().await;
+    if let Err(e) = config {
+        error!("failed to query config: {}", e);
+        return;
+    }
+    let config = config.unwrap();
     trace!("config query response {:?}", config);
+
+    let battery = api.query_battery().await;
+    if let Err(e) = battery {
+        error!("failed to query battery: {}", e);
+        return;
+    }
+    let battery = battery.unwrap();
     trace!("battery query response {:?}", battery);
 
     if dry_run {
@@ -148,6 +159,7 @@ async fn query_api(base_url: &str, secret: &str, dry_run: bool, metric_namespace
 
 #[cfg(test)]
 mod test {
+    use mockito::Server;
     use super::*;
 
     #[test]
@@ -172,5 +184,16 @@ mod test {
         assert_eq!(locator[0].1, "abc=123");
         assert_eq!(locator[1].0, "base");
         assert_eq!(locator[1].1, "456");
+    }
+
+    #[tokio::test]
+    async fn test_query_always_return() {
+        let server = Server::new_async().await;
+        let base_url = server.url();
+        let secret = "secret";
+        let metric_namespace = "phone";
+        let dry_run = false;
+        // should not panic even with incorrect base url
+        query_api(&base_url, secret, dry_run, metric_namespace).await;
     }
 }
