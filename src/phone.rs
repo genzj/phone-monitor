@@ -2,6 +2,7 @@ use crate::datatype::{BatteryResponse, ConfigResponse, ResponseWrapper};
 use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
 use hmac_sha256::HMAC;
+use log::trace;
 use reqwest::Response;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -10,7 +11,6 @@ use std::error::Error;
 use std::fmt;
 use std::fmt::Debug;
 use std::time::{Duration, SystemTime};
-use log::trace;
 
 trait Clock {
     fn timestamp(&self) -> u64;
@@ -105,6 +105,7 @@ impl Api {
     async fn send_post(&self, path: String, data: Option<Value>) -> ApiResult<Response> {
         let client = reqwest::ClientBuilder::new()
             .connect_timeout(Duration::from_secs(10))
+            .timeout(Duration::from_secs(60))
             .connection_verbose(true)
             .build()?;
         let url = format!("{}{}", self.base_url, path);
