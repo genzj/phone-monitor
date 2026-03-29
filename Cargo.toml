@@ -4,19 +4,19 @@ version = "0.2.2"
 edition = "2021"
 
 [dependencies]
-aws-config = { version = "1.1.7", features = ["behavior-version-latest"] }
-aws-sdk-cloudwatch = "1.60.0"
+aws-config = { version = "1.8.15", features = ["behavior-version-latest"] }
+aws-sdk-cloudwatch = "1.108.0"
 base64 = "0.22.1"
 dotenv = "0.15.0"
-env_logger = "0.11.6"
-hmac-sha256 = "1.1.8"
+env_logger = "0.11.10"
+hmac-sha256 = "1.1.14"
 pretty_env_logger = "0.5.0"
-reqwest = { version = "0.12.12", features = ["json"] }
-serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.135"
-tokio = { version = "1.43.0", features = ["full"] }
-log = "0.4.25"
-clap = { version = "4.5.27", features = ["env", "derive"] }
+reqwest = { version = "0.13.2", features = ["json"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+tokio = { version = "1.50.0", features = ["full"] }
+log = "0.4.29"
+clap = { version = "4.6.0", features = ["env", "derive"] }
 
 [dev-dependencies]
-mockito = "1.6.1"
+mockito = "1.7.2"
